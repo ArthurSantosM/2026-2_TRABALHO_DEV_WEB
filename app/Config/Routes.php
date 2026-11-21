@@ -40,3 +40,12 @@ $routes->group('clientes', static function ($routes) {
     $routes->post('atualizar/(:num)', 'Clientes::atualizar/$1');
     $routes->post('excluir/(:num)', 'Clientes::excluir/$1');
 });
+
+$routes->group('lojas', static function ($routes) {
+    $routes->get('', 'Lojas::index');
+    $routes->get('nova', 'Lojas::novo');
+    $routes->post('salvar', 'Lojas::salvar');
+    $routes->get('editar/(:num)', 'Lojas::editar/$1');
+    $routes->post('atualizar/(:num)', 'Lojas::atualizar/$1');
+    $routes->post('excluir/(:num)', 'Lojas::excluir/$1');
+});

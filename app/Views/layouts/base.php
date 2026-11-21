@@ -24,6 +24,7 @@
                         'produtos'     => 'Produtos',
                         'fornecedores' => 'Fornecedores',
                         'clientes'     => 'Clientes',
+                        'lojas'        => 'Lojas',
                     ];
                     ?>
                     <?php foreach ($itensMenu as $caminho => $rotulo): ?>
