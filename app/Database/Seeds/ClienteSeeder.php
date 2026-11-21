@@ -20,13 +20,11 @@ class ClienteSeeder extends Seeder
             'cpf'      => '52998224725',
             'telefone' => '27999991111',
             'email'    => 'camila@example.com',
-            'unidade'  => 'Apto 302',
         ]);
 
         $model->insert([
-            'nome'    => 'Rafael Lima',
-            'cpf'     => '11144477735',
-            'unidade' => 'Apto 101',
+            'nome' => 'Rafael Lima',
+            'cpf'  => '11144477735',
         ]);
     }
 }

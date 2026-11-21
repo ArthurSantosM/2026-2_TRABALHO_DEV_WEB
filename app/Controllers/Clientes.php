@@ -30,7 +30,7 @@ class Clientes extends BaseController
         return view('clientes/form', [
             'titulo'  => 'Novo cliente',
             'acao'    => site_url('clientes/salvar'),
-            'cliente' => ['nome' => '', 'cpf' => '', 'telefone' => '', 'email' => '', 'unidade' => ''],
+            'cliente' => ['nome' => '', 'cpf' => '', 'telefone' => '', 'email' => ''],
         ]);
     }
 
@@ -95,7 +95,6 @@ class Clientes extends BaseController
             'cpf'      => somente_numeros($this->request->getPost('cpf')),
             'telefone' => somente_numeros($this->request->getPost('telefone')),
             'email'    => trim((string) $this->request->getPost('email')),
-            'unidade'  => trim((string) $this->request->getPost('unidade')),
         ];
     }
 }

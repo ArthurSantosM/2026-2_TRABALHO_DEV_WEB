@@ -76,3 +76,21 @@ $routes->group('venda-produtos', static function ($routes) {
     $routes->post('atualizar/(:num)', 'VendaProdutos::atualizar/$1');
     $routes->post('excluir/(:num)', 'VendaProdutos::excluir/$1');
 });
+
+$routes->group('unidades', static function ($routes) {
+    $routes->get('', 'Unidades::index');
+    $routes->get('nova', 'Unidades::novo');
+    $routes->post('salvar', 'Unidades::salvar');
+    $routes->get('editar/(:num)', 'Unidades::editar/$1');
+    $routes->post('atualizar/(:num)', 'Unidades::atualizar/$1');
+    $routes->post('excluir/(:num)', 'Unidades::excluir/$1');
+});
+
+$routes->group('cliente-unidades', static function ($routes) {
+    $routes->get('', 'ClienteUnidades::index');
+    $routes->get('novo', 'ClienteUnidades::novo');
+    $routes->post('salvar', 'ClienteUnidades::salvar');
+    $routes->get('editar/(:num)', 'ClienteUnidades::editar/$1');
+    $routes->post('atualizar/(:num)', 'ClienteUnidades::atualizar/$1');
+    $routes->post('excluir/(:num)', 'ClienteUnidades::excluir/$1');
+});

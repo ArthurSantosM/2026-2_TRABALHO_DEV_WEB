@@ -54,6 +54,20 @@
                         </div>
                     </div>
 
+                    <div class="mb-3">
+                        <label for="unidade_id" class="form-label">Unidade do cliente *</label>
+                        <?php $unidadeEscolhida = (string) old('unidade_id', $venda['unidade_id'] ?? ''); ?>
+                        <select id="unidade_id" name="unidade_id" class="form-select" required>
+                            <option value="">Selecione uma unidade</option>
+                            <?php foreach ($unidades as $unidade): ?>
+                                <option value="<?= esc($unidade['id']) ?>"
+                                    <?= $unidadeEscolhida === (string) $unidade['id'] ? 'selected' : '' ?>>
+                                    <?= esc($unidade['identificador']) ?> — <?= esc($unidade['loja_nome'] ?? 'Sem loja') ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
                     <div class="row">
                         <div class="col-12 col-sm-4 mb-3">
                             <label for="data" class="form-label">Data e hora *</label>

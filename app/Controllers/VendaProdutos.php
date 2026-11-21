@@ -3,8 +3,10 @@
 namespace App\Controllers;
 
 use App\Models\ClienteModel;
+use App\Models\ClienteUnidadeModel;
 use App\Models\LojaModel;
 use App\Models\ProdutoModel;
+use App\Models\UnidadeModel;
 use App\Models\VendaProdutoModel;
 use CodeIgniter\HTTP\RedirectResponse;
 
@@ -14,13 +16,17 @@ class VendaProdutos extends BaseController
     private ClienteModel $clienteModel;
     private LojaModel $lojaModel;
     private ProdutoModel $produtoModel;
+    private UnidadeModel $unidadeModel;
+    private ClienteUnidadeModel $clienteUnidadeModel;
 
     public function __construct()
     {
-        $this->vendaProdutoModel = new VendaProdutoModel();
-        $this->clienteModel      = new ClienteModel();
-        $this->lojaModel         = new LojaModel();
-        $this->produtoModel      = new ProdutoModel();
+        $this->vendaProdutoModel   = new VendaProdutoModel();
+        $this->clienteModel        = new ClienteModel();
+        $this->lojaModel           = new LojaModel();
+        $this->produtoModel        = new ProdutoModel();
+        $this->unidadeModel        = new UnidadeModel();
+        $this->clienteUnidadeModel = new ClienteUnidadeModel();
     }
 
     public function index(): string
@@ -43,6 +49,7 @@ class VendaProdutos extends BaseController
                 'cliente_id'     => '',
                 'loja_id'        => '',
                 'produto_id'     => '',
+                'unidade_id'     => '',
                 'data'           => date('Y-m-d H:i:s'),
                 'quantidade'     => '1',
                 'preco_unitario' => '',
@@ -50,12 +57,20 @@ class VendaProdutos extends BaseController
             'clientes' => $this->clienteModel->orderBy('nome', 'ASC')->findAll(),
             'lojas'    => $this->lojaModel->orderBy('nome', 'ASC')->findAll(),
             'produtos' => $this->produtoModel->orderBy('nome', 'ASC')->findAll(),
+            'unidades' => $this->unidadeModel->listar(),
         ]);
     }
 
     public function salvar(): RedirectResponse
     {
-        if (! $this->vendaProdutoModel->insert($this->dadosDoFormulario())) {
+        $dados = $this->dadosDoFormulario();
+
+        $erroVinculo = $this->validarVinculo((int) $dados['cliente_id'], (int) $dados['loja_id'], (int) $dados['unidade_id']);
+        if ($erroVinculo !== null) {
+            return redirect()->back()->withInput()->with('erros', [$erroVinculo]);
+        }
+
+        if (! $this->vendaProdutoModel->insert($dados)) {
             return redirect()->back()->withInput()->with('erros', $this->vendaProdutoModel->errors());
         }
 
@@ -77,6 +92,7 @@ class VendaProdutos extends BaseController
             'clientes' => $this->clienteModel->orderBy('nome', 'ASC')->findAll(),
             'lojas'    => $this->lojaModel->orderBy('nome', 'ASC')->findAll(),
             'produtos' => $this->produtoModel->orderBy('nome', 'ASC')->findAll(),
+            'unidades' => $this->unidadeModel->listar(),
         ]);
     }
 
@@ -86,8 +102,15 @@ class VendaProdutos extends BaseController
             return redirect()->to('venda-produtos')->with('erros', ['Venda não encontrada.']);
         }
 
+        $dados = $this->dadosDoFormulario();
+
+        $erroVinculo = $this->validarVinculo((int) $dados['cliente_id'], (int) $dados['loja_id'], (int) $dados['unidade_id']);
+        if ($erroVinculo !== null) {
+            return redirect()->back()->withInput()->with('erros', [$erroVinculo]);
+        }
+
         // O "id" segue junto para as regras de validação do model.
-        $dados = $this->dadosDoFormulario() + ['id' => $id];
+        $dados += ['id' => $id];
 
         if (! $this->vendaProdutoModel->update($id, $dados)) {
             return redirect()->back()->withInput()->with('erros', $this->vendaProdutoModel->errors());
@@ -130,9 +153,39 @@ class VendaProdutos extends BaseController
             'cliente_id'     => trim((string) $this->request->getPost('cliente_id')),
             'loja_id'        => trim((string) $this->request->getPost('loja_id')),
             'produto_id'     => trim((string) $this->request->getPost('produto_id')),
+            'unidade_id'     => trim((string) $this->request->getPost('unidade_id')),
             'data'           => $this->dataDoFormulario(),
             'quantidade'     => trim((string) $this->request->getPost('quantidade')),
             'preco_unitario' => trim((string) $this->request->getPost('preco_unitario')),
         ];
+    }
+
+    /**
+     * Garante que a unidade pertence à loja e que o cliente possui cadastro nela.
+     *
+     * @return string|null Mensagem de erro, ou null quando o vínculo é válido.
+     */
+    private function validarVinculo(int $clienteId, int $lojaId, int $unidadeId): ?string
+    {
+        $unidade = $this->unidadeModel->find($unidadeId);
+
+        if ($unidade === null) {
+            return 'A unidade informada não existe.';
+        }
+
+        if ((int) $unidade['loja_id'] !== $lojaId) {
+            return 'A unidade informada não pertence à loja escolhida.';
+        }
+
+        $vinculo = $this->clienteUnidadeModel
+            ->where('cliente_id', $clienteId)
+            ->where('unidade_id', $unidadeId)
+            ->countAllResults() > 0;
+
+        if (! $vinculo) {
+            return 'O cliente não possui cadastro nesta unidade.';
+        }
+
+        return null;
     }
 }

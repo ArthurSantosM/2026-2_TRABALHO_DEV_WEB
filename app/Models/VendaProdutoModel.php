@@ -9,7 +9,7 @@ class VendaProdutoModel extends Model
     protected $table         = 'venda_produtos';
     protected $primaryKey    = 'id';
     protected $returnType    = 'array';
-    protected $allowedFields = ['cliente_id', 'loja_id', 'produto_id', 'data', 'quantidade', 'preco_unitario'];
+    protected $allowedFields = ['cliente_id', 'loja_id', 'produto_id', 'unidade_id', 'data', 'quantidade', 'preco_unitario'];
     protected $useTimestamps = true;
 
     protected $validationRules = [
@@ -17,6 +17,7 @@ class VendaProdutoModel extends Model
         'cliente_id'     => 'required|is_natural_no_zero|is_not_unique[clientes.id]',
         'loja_id'        => 'required|is_natural_no_zero|is_not_unique[lojas.id]',
         'produto_id'     => 'required|is_natural_no_zero|is_not_unique[produtos.id]',
+        'unidade_id'     => 'required|is_natural_no_zero|is_not_unique[unidades.id]',
         'data'           => 'required|valid_date[Y-m-d H:i:s]',
         'quantidade'     => 'required|is_natural_no_zero|less_than[100000]',
         'preco_unitario' => 'required|decimal|greater_than[0]|less_than[100000]',
@@ -37,6 +38,11 @@ class VendaProdutoModel extends Model
             'required'           => 'Informe o produto.',
             'is_natural_no_zero' => 'O produto informado é inválido.',
             'is_not_unique'      => 'O produto informado não existe.',
+        ],
+        'unidade_id' => [
+            'required'           => 'Informe a unidade.',
+            'is_natural_no_zero' => 'A unidade informada é inválida.',
+            'is_not_unique'      => 'A unidade informada não existe.',
         ],
         'data' => [
             'required'    => 'Informe a data da venda.',
@@ -60,10 +66,11 @@ class VendaProdutoModel extends Model
      */
     public function listar(?string $busca = null): array
     {
-        $this->select('venda_produtos.*, clientes.nome AS cliente_nome, lojas.nome AS loja_nome, produtos.nome AS produto_nome')
+        $this->select('venda_produtos.*, clientes.nome AS cliente_nome, lojas.nome AS loja_nome, produtos.nome AS produto_nome, unidades.identificador AS unidade_nome')
             ->join('clientes', 'clientes.id = venda_produtos.cliente_id', 'left')
             ->join('lojas', 'lojas.id = venda_produtos.loja_id', 'left')
-            ->join('produtos', 'produtos.id = venda_produtos.produto_id', 'left');
+            ->join('produtos', 'produtos.id = venda_produtos.produto_id', 'left')
+            ->join('unidades', 'unidades.id = venda_produtos.unidade_id', 'left');
 
         if ($busca !== null && $busca !== '') {
             $this->groupStart()

@@ -26,6 +26,7 @@
                     <th scope="col">Cliente</th>
                     <th scope="col">Loja</th>
                     <th scope="col">Produto</th>
+                    <th scope="col">Unidade</th>
                     <th scope="col" class="text-end">Qtd.</th>
                     <th scope="col" class="text-end">Preço unit.</th>
                     <th scope="col" class="text-end">Total</th>
@@ -35,7 +36,7 @@
             <tbody>
                 <?php if (empty($vendas)): ?>
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4">Nenhuma venda encontrada.</td>
+                        <td colspan="9" class="text-center text-muted py-4">Nenhuma venda encontrada.</td>
                     </tr>
                 <?php endif; ?>
 
@@ -45,6 +46,7 @@
                         <td><?= esc($venda['cliente_nome']) ?></td>
                         <td><?= esc($venda['loja_nome']) ?></td>
                         <td><?= esc($venda['produto_nome']) ?></td>
+                        <td><?= esc($venda['unidade_nome'] ?? '—') ?></td>
                         <td class="text-end"><?= esc($venda['quantidade']) ?></td>
                         <td class="text-end"><?= esc(number_to_currency((float) $venda['preco_unitario'], 'BRL', 'pt_BR', 2)) ?></td>
                         <td class="text-end">
