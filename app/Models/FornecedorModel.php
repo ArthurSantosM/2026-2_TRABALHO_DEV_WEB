@@ -16,7 +16,7 @@ class FornecedorModel extends Model
         'id'        => 'permit_empty|is_natural_no_zero',
         'nome'      => 'required|min_length[2]|max_length[150]',
         'descricao' => 'permit_empty|max_length[255]',
-        'cnpj'      => 'required|numeric|exact_length[14]|is_unique[fornecedores.cnpj,id,{id}]',
+        'cnpj'      => 'required|exact_length[14]|is_unique[fornecedores.cnpj,id,{id}]',
         'telefone'  => 'permit_empty|numeric|min_length[10]|max_length[11]',
         'endereco'  => 'permit_empty|max_length[255]',
         'email'     => 'permit_empty|valid_email|max_length[150]',
