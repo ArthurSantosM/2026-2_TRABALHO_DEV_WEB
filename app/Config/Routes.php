@@ -49,3 +49,30 @@ $routes->group('lojas', static function ($routes) {
     $routes->post('atualizar/(:num)', 'Lojas::atualizar/$1');
     $routes->post('excluir/(:num)', 'Lojas::excluir/$1');
 });
+
+$routes->group('franquias', static function ($routes) {
+    $routes->get('', 'Franquias::index');
+    $routes->get('nova', 'Franquias::novo');
+    $routes->post('salvar', 'Franquias::salvar');
+    $routes->get('editar/(:num)', 'Franquias::editar/$1');
+    $routes->post('atualizar/(:num)', 'Franquias::atualizar/$1');
+    $routes->post('excluir/(:num)', 'Franquias::excluir/$1');
+});
+
+$routes->group('estoque-lojas', static function ($routes) {
+    $routes->get('', 'EstoqueLojas::index');
+    $routes->get('novo', 'EstoqueLojas::novo');
+    $routes->post('salvar', 'EstoqueLojas::salvar');
+    $routes->get('editar/(:num)', 'EstoqueLojas::editar/$1');
+    $routes->post('atualizar/(:num)', 'EstoqueLojas::atualizar/$1');
+    $routes->post('excluir/(:num)', 'EstoqueLojas::excluir/$1');
+});
+
+$routes->group('venda-produtos', static function ($routes) {
+    $routes->get('', 'VendaProdutos::index');
+    $routes->get('nova', 'VendaProdutos::novo');
+    $routes->post('salvar', 'VendaProdutos::salvar');
+    $routes->get('editar/(:num)', 'VendaProdutos::editar/$1');
+    $routes->post('atualizar/(:num)', 'VendaProdutos::atualizar/$1');
+    $routes->post('excluir/(:num)', 'VendaProdutos::excluir/$1');
+});

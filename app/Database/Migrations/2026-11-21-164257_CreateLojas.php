@@ -40,8 +40,8 @@ class CreateLojas extends Migration
         ]);
 
         $this->forge->addPrimaryKey('id');
-        // TODO: quando a migration de franquias existir, adicionar:
-        // $this->forge->addForeignKey('franquia_id', 'franquias', 'id', 'CASCADE', 'RESTRICT');
+        // A FK para franquias é adicionada em AddFranquiaForeignKeyToLojas,
+        // pois CreateFranquias roda depois desta migration.
         $this->forge->createTable('lojas');
     }
 
