@@ -68,4 +68,13 @@ class ClienteModel extends Model
 
         return $this->orderBy('clientes.nome', 'ASC')->findAll();
     }
+
+    /**
+     * Indica se o cliente já possui vínculos com unidades ou vendas.
+     */
+    public function possuiDependencias(int $id): bool
+    {
+        return $this->db->table('cliente_unidades')->where('cliente_id', $id)->countAllResults() > 0
+            || $this->db->table('venda_produtos')->where('cliente_id', $id)->countAllResults() > 0;
+    }
 }

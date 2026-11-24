@@ -40,14 +40,28 @@ class LojaModel extends Model
      */
     public function listar(?string $busca = null): array
     {
+        $this->select('lojas.*, franquias.nome AS franquia_nome')
+            ->join('franquias', 'franquias.id = lojas.franquia_id', 'left');
+
         if ($busca !== null && $busca !== '') {
             $this->groupStart()
-                ->like('nome', $busca)
-                ->orLike('franquia_id', $busca)
-                ->orLike('endereco', $busca);
-            $this->groupEnd();
+                ->like('lojas.nome', $busca)
+                ->orLike('franquias.nome', $busca)
+                ->orLike('lojas.endereco', $busca)
+                ->groupEnd();
         }
 
-        return $this->orderBy('nome', 'ASC')->findAll();
+        return $this->orderBy('lojas.nome', 'ASC')->findAll();
+    }
+
+    /**
+     * Indica se a loja já possui unidades, estoque, vendas ou movimentações.
+     */
+    public function possuiDependencias(int $id): bool
+    {
+        return $this->db->table('unidades')->where('loja_id', $id)->countAllResults() > 0
+            || $this->db->table('estoque_lojas')->where('loja_id', $id)->countAllResults() > 0
+            || $this->db->table('venda_produtos')->where('loja_id', $id)->countAllResults() > 0
+            || $this->db->table('estoque_movimentos')->where('loja_id', $id)->countAllResults() > 0;
     }
 }

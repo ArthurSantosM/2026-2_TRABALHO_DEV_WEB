@@ -31,6 +31,32 @@ class UnidadeModel extends Model
     ];
 
     /**
+     * Indica se já existe uma unidade com o mesmo identificador na loja.
+     * O unique do banco é (loja_id, identificador).
+     */
+    public function identificadorDuplicado(int $lojaId, string $identificador, ?int $idIgnorar = null): bool
+    {
+        $builder = $this->db->table($this->table)
+            ->where('loja_id', $lojaId)
+            ->where('identificador', $identificador);
+
+        if ($idIgnorar !== null) {
+            $builder->where('id !=', $idIgnorar);
+        }
+
+        return $builder->countAllResults() > 0;
+    }
+
+    /**
+     * Indica se a unidade já é usada por vínculos ou vendas.
+     */
+    public function possuiDependencias(int $id): bool
+    {
+        return $this->db->table('cliente_unidades')->where('unidade_id', $id)->countAllResults() > 0
+            || $this->db->table('venda_produtos')->where('unidade_id', $id)->countAllResults() > 0;
+    }
+
+    /**
      * Lista as unidades com o nome da loja, com busca opcional.
      */
     public function listar(?string $busca = null): array

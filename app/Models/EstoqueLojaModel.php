@@ -69,6 +69,22 @@ class EstoqueLojaModel extends Model
     }
 
     /**
+     * Indica se a dupla loja/produto já está cadastrada.
+     */
+    public function parDuplicado(int $lojaId, int $produtoId, ?int $idIgnorar = null): bool
+    {
+        $builder = $this->db->table($this->table)
+            ->where('loja_id', $lojaId)
+            ->where('produto_id', $produtoId);
+
+        if ($idIgnorar !== null) {
+            $builder->where('id !=', $idIgnorar);
+        }
+
+        return $builder->countAllResults() > 0;
+    }
+
+    /**
      * Aplica uma movimentação de estoque na loja (delta negativo = baixa,
      * delta positivo = devolução) e registra o evento no histórico.
      * Saldo negativo é permitido e representa uma venda sem entrada correspondente.
@@ -90,30 +106,29 @@ class EstoqueLojaModel extends Model
 
         $agora = date('Y-m-d H:i:s');
 
-        $registro = $this->db->table($this->table)
-            ->select('id')
-            ->where('loja_id', $lojaId)
-            ->where('produto_id', $produtoId)
-            ->get()
-            ->getRowArray();
+        // Insere a linha (se ainda não existir) de forma atômica. O valor começa
+        // em zero e o delta é aplicado no UPDATE abaixo, evitando que duas
+        // requisições simultâneas criem a mesma dupla loja/produto.
+        $inseriu = $this->db->table($this->table)->ignore(true)->insert([
+            'loja_id'    => $lojaId,
+            'produto_id' => $produtoId,
+            'quantidade' => 0,
+            'created_at' => $agora,
+            'updated_at' => $agora,
+        ]);
 
-        if ($registro === null) {
-            $ok = $this->db->table($this->table)->insert([
-                'loja_id'    => $lojaId,
-                'produto_id' => $produtoId,
-                'quantidade' => $delta,
-                'created_at' => $agora,
-                'updated_at' => $agora,
-            ]);
-        } else {
-            $ok = $this->db->table($this->table)
-                ->where('id', $registro['id'])
-                ->set('quantidade', 'quantidade + ' . $delta, false)
-                ->set('updated_at', $agora)
-                ->update();
+        if (! $inseriu) {
+            return false;
         }
 
-        if (! $ok) {
+        $atualizou = $this->db->table($this->table)
+            ->where('loja_id', $lojaId)
+            ->where('produto_id', $produtoId)
+            ->set('quantidade', 'quantidade + ' . $delta, false)
+            ->set('updated_at', $agora)
+            ->update();
+
+        if (! $atualizou) {
             return false;
         }
 
@@ -181,8 +196,10 @@ class EstoqueLojaModel extends Model
         $quantidadeNova   = (int) $dados['quantidade'];
 
         if ($lojaAntiga !== $lojaNova || $produtoAntigo !== $produtoNovo) {
-            $this->estoqueMovimentoModel->registrar($lojaAntiga, $produtoAntigo, -$quantidadeAntiga, 'ajuste', null, 'Ajuste manual: mudança de loja/produto');
-            $registrado = $this->estoqueMovimentoModel->registrar($lojaNova, $produtoNovo, $quantidadeNova, 'ajuste', null, 'Ajuste manual: mudança de loja/produto');
+            $removeu = $this->estoqueMovimentoModel->registrar($lojaAntiga, $produtoAntigo, -$quantidadeAntiga, 'ajuste', null, 'Ajuste manual: mudança de loja/produto');
+            $entrou  = $this->estoqueMovimentoModel->registrar($lojaNova, $produtoNovo, $quantidadeNova, 'ajuste', null, 'Ajuste manual: mudança de loja/produto');
+
+            $registrado = $removeu && $entrou;
         } elseif ($quantidadeAntiga !== $quantidadeNova) {
             $registrado = $this->estoqueMovimentoModel->registrar(
                 $lojaNova,

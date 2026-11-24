@@ -55,6 +55,9 @@ class EstoqueMovimentoModel extends Model
     /**
      * Registra um evento de estoque. O sinal de "quantidade" define o tipo:
      * positivo = entrada, negativo = saída.
+     *
+     * Deve ser chamado depois que o saldo de estoque_lojas já foi aplicado,
+     * pois o saldo_apos é lido dessa tabela.
      */
     public function registrar(
         int $lojaId,
@@ -71,11 +74,13 @@ class EstoqueMovimentoModel extends Model
             ->get()
             ->getRowArray();
 
+        $tipo = $quantidade < 0 ? 'saida' : 'entrada';
+
         return $this->insert([
             'loja_id'    => $lojaId,
             'produto_id' => $produtoId,
             'venda_id'   => $vendaId,
-            'tipo'       => $quantidade >= 0 ? 'entrada' : 'saida',
+            'tipo'       => $tipo,
             'origem'     => $origem,
             'quantidade' => $quantidade,
             'saldo_apos' => $saldo === null ? 0 : (int) $saldo['quantidade'],

@@ -62,4 +62,14 @@ class ProdutoModel extends Model
 
         return $this->orderBy('produtos.nome', 'ASC')->findAll();
     }
+
+    /**
+     * Indica se o produto já possui estoque, vendas ou movimentações.
+     */
+    public function possuiDependencias(int $id): bool
+    {
+        return $this->db->table('estoque_lojas')->where('produto_id', $id)->countAllResults() > 0
+            || $this->db->table('venda_produtos')->where('produto_id', $id)->countAllResults() > 0
+            || $this->db->table('estoque_movimentos')->where('produto_id', $id)->countAllResults() > 0;
+    }
 }

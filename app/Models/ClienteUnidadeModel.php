@@ -32,6 +32,99 @@ class ClienteUnidadeModel extends Model
     ];
 
     /**
+     * Indica se o vínculo cliente/unidade já existe.
+     */
+    public function vinculoExiste(int $clienteId, int $unidadeId, ?int $idIgnorar = null): bool
+    {
+        $builder = $this->db->table($this->table)
+            ->where('cliente_id', $clienteId)
+            ->where('unidade_id', $unidadeId);
+
+        if ($idIgnorar !== null) {
+            $builder->where('id !=', $idIgnorar);
+        }
+
+        return $builder->countAllResults() > 0;
+    }
+
+    /**
+     * Indica se o cliente possui vínculo com a unidade dentro da loja informada.
+     */
+    public function clientePossuiUnidadeNaLoja(int $clienteId, int $unidadeId, int $lojaId): bool
+    {
+        return $this->db->table($this->table)
+            ->join('unidades', 'unidades.id = cliente_unidades.unidade_id')
+            ->where('cliente_unidades.cliente_id', $clienteId)
+            ->where('cliente_unidades.unidade_id', $unidadeId)
+            ->where('unidades.loja_id', $lojaId)
+            ->countAllResults() > 0;
+    }
+
+    /**
+     * Valida a combinação cliente/loja/unidade usada em uma venda.
+     *
+     * @return string|null Mensagem de erro, ou null quando o vínculo é válido.
+     */
+    public function validarVinculo(int $clienteId, int $lojaId, int $unidadeId): ?string
+    {
+        if ($clienteId <= 0) {
+            return 'Informe o cliente.';
+        }
+
+        if ($lojaId <= 0) {
+            return 'Informe a loja.';
+        }
+
+        if ($unidadeId <= 0) {
+            return 'Informe a unidade.';
+        }
+
+        if ($this->db->table('clientes')->where('id', $clienteId)->countAllResults() === 0) {
+            return 'O cliente informado não existe.';
+        }
+
+        if ($this->db->table('lojas')->where('id', $lojaId)->countAllResults() === 0) {
+            return 'A loja informada não existe.';
+        }
+
+        $unidade = $this->db->table('unidades')
+            ->select('loja_id')
+            ->where('id', $unidadeId)
+            ->get()
+            ->getRowArray();
+
+        if ($unidade === null) {
+            return 'A unidade informada não existe.';
+        }
+
+        if ((int) $unidade['loja_id'] !== $lojaId) {
+            return 'A unidade informada não pertence à loja escolhida.';
+        }
+
+        if (! $this->clientePossuiUnidadeNaLoja($clienteId, $unidadeId, $lojaId)) {
+            return 'O cliente não possui cadastro nesta unidade.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Indica se o cliente possui algum vínculo cadastrado.
+     */
+    public function possuiVinculosDoCliente(int $clienteId): bool
+    {
+        return $this->db->table($this->table)->where('cliente_id', $clienteId)->countAllResults() > 0;
+    }
+
+    /**
+     * Indica se a unidade possui algum vínculo cadastrado.
+     */
+    public function possuiVinculosDaUnidade(int $unidadeId): bool
+    {
+        return $this->db->table($this->table)->where('unidade_id', $unidadeId)->countAllResults() > 0;
+    }
+
+    /**
      * Lojas onde o cliente possui pelo menos uma unidade vinculada.
      */
     public function lojasDoCliente(int $clienteId): array

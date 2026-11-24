@@ -37,4 +37,12 @@ class FranquiaModel extends Model
 
         return $this->orderBy('nome', 'ASC')->findAll();
     }
+
+    /**
+     * Indica se a franquia já possui lojas vinculadas.
+     */
+    public function possuiDependencias(int $id): bool
+    {
+        return $this->db->table('lojas')->where('franquia_id', $id)->countAllResults() > 0;
+    }
 }

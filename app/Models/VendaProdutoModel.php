@@ -84,7 +84,7 @@ class VendaProdutoModel extends Model
             return false;
         }
 
-        $this->estoqueLojaModel->movimentar(
+        $movimentou = $this->estoqueLojaModel->movimentar(
             (int) $dados['loja_id'],
             (int) $dados['produto_id'],
             - (int) $dados['quantidade'],
@@ -92,6 +92,13 @@ class VendaProdutoModel extends Model
             (int) $this->insertID(),
             'Baixa por venda'
         );
+
+        if (! $movimentou) {
+            $this->db->transRollback();
+            $this->errors = ['Não foi possível baixar o estoque da venda.'];
+
+            return false;
+        }
 
         $this->db->transComplete();
 
@@ -127,7 +134,7 @@ class VendaProdutoModel extends Model
 
         if ($lojaAntiga === $lojaNova && $produtoAntigo === $produtoNovo) {
             // Positivo devolve a diferença; negativo dá baixa da diferença.
-            $this->estoqueLojaModel->movimentar(
+            $movimentou = $this->estoqueLojaModel->movimentar(
                 $lojaNova,
                 $produtoNovo,
                 $quantidadeAntiga - $quantidadeNova,
@@ -137,8 +144,17 @@ class VendaProdutoModel extends Model
             );
         } else {
             // A venda saiu de uma loja/produto e foi para outro.
-            $this->estoqueLojaModel->movimentar($lojaAntiga, $produtoAntigo, $quantidadeAntiga, 'venda', $id, 'Ajuste por edição de venda');
-            $this->estoqueLojaModel->movimentar($lojaNova, $produtoNovo, -$quantidadeNova, 'venda', $id, 'Ajuste por edição de venda');
+            $devolveu = $this->estoqueLojaModel->movimentar($lojaAntiga, $produtoAntigo, $quantidadeAntiga, 'venda', $id, 'Ajuste por edição de venda');
+            $baixou   = $this->estoqueLojaModel->movimentar($lojaNova, $produtoNovo, -$quantidadeNova, 'venda', $id, 'Ajuste por edição de venda');
+
+            $movimentou = $devolveu && $baixou;
+        }
+
+        if (! $movimentou) {
+            $this->db->transRollback();
+            $this->errors = ['Não foi possível ajustar o estoque da venda.'];
+
+            return false;
         }
 
         $this->db->transComplete();
@@ -165,7 +181,7 @@ class VendaProdutoModel extends Model
             return false;
         }
 
-        $this->estoqueLojaModel->movimentar(
+        $movimentou = $this->estoqueLojaModel->movimentar(
             (int) $venda['loja_id'],
             (int) $venda['produto_id'],
             (int) $venda['quantidade'],
@@ -173,6 +189,13 @@ class VendaProdutoModel extends Model
             null,
             'Estorno da venda #' . $id
         );
+
+        if (! $movimentou) {
+            $this->db->transRollback();
+            $this->errors = ['Não foi possível devolver o estoque da venda.'];
+
+            return false;
+        }
 
         $this->db->transComplete();
 
