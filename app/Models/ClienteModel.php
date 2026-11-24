@@ -48,7 +48,7 @@ class ClienteModel extends Model
      */
     public function listar(?string $busca = null): array
     {
-        $this->select('clientes.*, GROUP_CONCAT(unidades.identificador SEPARATOR ", ") AS unidades_nome')
+        $this->select("clientes.*, GROUP_CONCAT(unidades.identificador, ', ') AS unidades_nome")
             ->join('cliente_unidades', 'cliente_unidades.cliente_id = clientes.id', 'left')
             ->join('unidades', 'unidades.id = cliente_unidades.unidade_id', 'left')
             ->groupBy('clientes.id');
