@@ -46,7 +46,7 @@ class EstoqueLojas extends BaseController
     {
         $dados = $this->dadosDoFormulario();
 
-        if ($this->parDuplicado((int) $dados['loja_id'], (int) $dados['produto_id'])) {
+        if ($this->estoqueLojaModel->parDuplicado((int) $dados['loja_id'], (int) $dados['produto_id'])) {
             return redirect()->back()->withInput()
                 ->with('erros', ['Já existe estoque cadastrado para esta loja e produto.']);
         }
@@ -83,7 +83,7 @@ class EstoqueLojas extends BaseController
 
         $dados = $this->dadosDoFormulario();
 
-        if ($this->parDuplicado((int) $dados['loja_id'], (int) $dados['produto_id'], $id)) {
+        if ($this->estoqueLojaModel->parDuplicado((int) $dados['loja_id'], (int) $dados['produto_id'], $id)) {
             return redirect()->back()->withInput()
                 ->with('erros', ['Já existe estoque cadastrado para esta loja e produto.']);
         }
@@ -121,21 +121,5 @@ class EstoqueLojas extends BaseController
             'produto_id' => trim((string) $this->request->getPost('produto_id')),
             'quantidade' => trim((string) $this->request->getPost('quantidade')),
         ];
-    }
-
-    /**
-     * Verifica se a dupla loja/produto já está cadastrada.
-     */
-    private function parDuplicado(int $lojaId, int $produtoId, ?int $idIgnorar = null): bool
-    {
-        $builder = $this->estoqueLojaModel
-            ->where('loja_id', $lojaId)
-            ->where('produto_id', $produtoId);
-
-        if ($idIgnorar !== null) {
-            $builder->where('id !=', $idIgnorar);
-        }
-
-        return $builder->countAllResults() > 0;
     }
 }

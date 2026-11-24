@@ -22,6 +22,10 @@ class EstoqueMovimentacoes extends BaseController
         $busca  = trim((string) $this->request->getGet('busca'));
         $origem = trim((string) $this->request->getGet('origem'));
 
+        if (! in_array($origem, ['venda', 'estorno', 'ajuste'], true)) {
+            $origem = '';
+        }
+
         return view('estoque_movimentacoes/index', [
             'titulo'       => 'Movimentações de estoque',
             'busca'        => $busca,

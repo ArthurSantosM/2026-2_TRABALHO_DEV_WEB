@@ -80,6 +80,12 @@ class Franquias extends BaseController
             return redirect()->to('franquias')->with('erros', ['Franquia não encontrada.']);
         }
 
+        if ($this->franquiaModel->possuiDependencias($id)) {
+            return redirect()->to('franquias')->with('erros', [
+                'Não é possível excluir: existem lojas vinculadas a esta franquia. Remova-as primeiro.',
+            ]);
+        }
+
         $this->franquiaModel->delete($id);
 
         return redirect()->to('franquias')->with('sucesso', 'Franquia excluída com sucesso.');

@@ -80,6 +80,12 @@ class Clientes extends BaseController
             return redirect()->to('clientes')->with('erros', ['Cliente não encontrado.']);
         }
 
+        if ($this->clienteModel->possuiDependencias($id)) {
+            return redirect()->to('clientes')->with('erros', [
+                'Não é possível excluir: existem unidades vinculadas ou vendas deste cliente. Remova-as primeiro.',
+            ]);
+        }
+
         $this->clienteModel->delete($id);
 
         return redirect()->to('clientes')->with('sucesso', 'Cliente excluído com sucesso.');

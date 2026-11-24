@@ -9,16 +9,12 @@ use CodeIgniter\HTTP\RedirectResponse;
 class Lojas extends BaseController
 {
     private LojaModel $lojaModel;
-    private ?FranquiaModel $franquiaModel = null;
+    private FranquiaModel $franquiaModel;
 
     public function __construct()
     {
-        $this->lojaModel = new LojaModel();
-
-        // Enquanto FranquiaModel não existir, o select de franquias fica vazio.
-        if (class_exists(FranquiaModel::class)) {
-            $this->franquiaModel = new FranquiaModel();
-        }
+        $this->lojaModel      = new LojaModel();
+        $this->franquiaModel  = new FranquiaModel();
     }
 
     public function index(): string
@@ -38,7 +34,7 @@ class Lojas extends BaseController
             'titulo'    => 'Nova loja',
             'acao'      => site_url('lojas/salvar'),
             'loja'      => ['nome' => '', 'endereco' => '', 'franquia_id' => ''],
-            'franquias' => $this->franquiaModel?->findAll() ?? [],
+            'franquias' => $this->franquiaModel->orderBy('nome', 'ASC')->findAll(),
         ]);
     }
 
@@ -63,7 +59,7 @@ class Lojas extends BaseController
             'titulo'    => 'Editar loja',
             'acao'      => site_url('lojas/atualizar/' . $id),
             'loja'      => $loja,
-            'franquias' => $this->franquiaModel?->findAll() ?? [],
+            'franquias' => $this->franquiaModel->orderBy('nome', 'ASC')->findAll(),
         ]);
     }
 
@@ -87,6 +83,12 @@ class Lojas extends BaseController
     {
         if ($this->lojaModel->find($id) === null) {
             return redirect()->to('lojas')->with('erros', ['Loja não encontrada.']);
+        }
+
+        if ($this->lojaModel->possuiDependencias($id)) {
+            return redirect()->to('lojas')->with('erros', [
+                'Não é possível excluir: existem unidades, estoques, vendas ou movimentações nesta loja. Remova-os primeiro.',
+            ]);
         }
 
         $this->lojaModel->delete($id);

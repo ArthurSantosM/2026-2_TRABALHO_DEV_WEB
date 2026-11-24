@@ -40,7 +40,14 @@ class Unidades extends BaseController
 
     public function salvar(): RedirectResponse
     {
-        if (! $this->unidadeModel->insert($this->dadosDoFormulario())) {
+        $dados = $this->dadosDoFormulario();
+
+        $erroDuplicidade = $this->validarDuplicidade((int) $dados['loja_id'], $dados['identificador']);
+        if ($erroDuplicidade !== null) {
+            return redirect()->back()->withInput()->with('erros', [$erroDuplicidade]);
+        }
+
+        if (! $this->unidadeModel->insert($dados)) {
             return redirect()->back()->withInput()->with('erros', $this->unidadeModel->errors());
         }
 
@@ -72,6 +79,11 @@ class Unidades extends BaseController
         // O "id" segue junto para as regras de validação do model.
         $dados = $this->dadosDoFormulario() + ['id' => $id];
 
+        $erroDuplicidade = $this->validarDuplicidade((int) $dados['loja_id'], $dados['identificador'], $id);
+        if ($erroDuplicidade !== null) {
+            return redirect()->back()->withInput()->with('erros', [$erroDuplicidade]);
+        }
+
         if (! $this->unidadeModel->update($id, $dados)) {
             return redirect()->back()->withInput()->with('erros', $this->unidadeModel->errors());
         }
@@ -85,9 +97,27 @@ class Unidades extends BaseController
             return redirect()->to('unidades')->with('erros', ['Unidade não encontrada.']);
         }
 
+        if ($this->unidadeModel->possuiDependencias($id)) {
+            return redirect()->to('unidades')->with('erros', [
+                'Não é possível excluir: existem clientes ou vendas vinculados a esta unidade. Remova os vínculos primeiro.',
+            ]);
+        }
+
         $this->unidadeModel->delete($id);
 
         return redirect()->to('unidades')->with('sucesso', 'Unidade excluída com sucesso.');
+    }
+
+    /**
+     * Impede duas unidades com o mesmo identificador na mesma loja.
+     */
+    private function validarDuplicidade(int $lojaId, string $identificador, ?int $idIgnorar = null): ?string
+    {
+        if ($lojaId > 0 && $this->unidadeModel->identificadorDuplicado($lojaId, $identificador, $idIgnorar)) {
+            return 'Já existe uma unidade com esse identificador nesta loja.';
+        }
+
+        return null;
     }
 
     /**

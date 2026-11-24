@@ -84,6 +84,12 @@ class Produtos extends BaseController
             return redirect()->to('produtos')->with('erros', ['Produto não encontrado.']);
         }
 
+        if ($this->produtoModel->possuiDependencias($id)) {
+            return redirect()->to('produtos')->with('erros', [
+                'Não é possível excluir: existem estoques, vendas ou movimentações deste produto. Remova-os primeiro.',
+            ]);
+        }
+
         $this->produtoModel->delete($id);
 
         return redirect()->to('produtos')->with('sucesso', 'Produto excluído com sucesso.');

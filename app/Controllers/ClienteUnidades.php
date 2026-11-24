@@ -46,7 +46,7 @@ class ClienteUnidades extends BaseController
     {
         $dados = $this->dadosDoFormulario();
 
-        if ($this->vinculoDuplicado((int) $dados['cliente_id'], (int) $dados['unidade_id'])) {
+        if ($this->clienteUnidadeModel->vinculoExiste((int) $dados['cliente_id'], (int) $dados['unidade_id'])) {
             return redirect()->back()->withInput()
                 ->with('erros', ['Este cliente já possui vínculo com esta unidade.']);
         }
@@ -83,7 +83,7 @@ class ClienteUnidades extends BaseController
 
         $dados = $this->dadosDoFormulario();
 
-        if ($this->vinculoDuplicado((int) $dados['cliente_id'], (int) $dados['unidade_id'], $id)) {
+        if ($this->clienteUnidadeModel->vinculoExiste((int) $dados['cliente_id'], (int) $dados['unidade_id'], $id)) {
             return redirect()->back()->withInput()
                 ->with('erros', ['Este cliente já possui vínculo com esta unidade.']);
         }
@@ -118,21 +118,5 @@ class ClienteUnidades extends BaseController
             'cliente_id' => trim((string) $this->request->getPost('cliente_id')),
             'unidade_id' => trim((string) $this->request->getPost('unidade_id')),
         ];
-    }
-
-    /**
-     * Verifica se o cliente já está vinculado à unidade.
-     */
-    private function vinculoDuplicado(int $clienteId, int $unidadeId, ?int $idIgnorar = null): bool
-    {
-        $builder = $this->clienteUnidadeModel
-            ->where('cliente_id', $clienteId)
-            ->where('unidade_id', $unidadeId);
-
-        if ($idIgnorar !== null) {
-            $builder->where('id !=', $idIgnorar);
-        }
-
-        return $builder->countAllResults() > 0;
     }
 }

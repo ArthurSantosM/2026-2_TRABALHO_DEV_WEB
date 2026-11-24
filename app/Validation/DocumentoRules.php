@@ -71,7 +71,9 @@ class DocumentoRules
 
     private function cnpjValido($valor): bool
     {
-        $cnpj = $this->normalizarCnpj($valor);
+        helper('formatacao');
+
+        $cnpj = normalizar_cnpj($valor);
 
         // 12 caracteres alfanuméricos + 2 dígitos verificadores (sempre numéricos).
         if (preg_match('/^[A-Z0-9]{12}\d{2}$/', $cnpj) !== 1) {
@@ -105,14 +107,6 @@ class DocumentoRules
         }
 
         return true;
-    }
-
-    /**
-     * Remove a pontuação e deixa as letras em maiúsculas.
-     */
-    private function normalizarCnpj($valor): string
-    {
-        return preg_replace('/[^A-Z0-9]/', '', strtoupper((string) $valor));
     }
 
     /**

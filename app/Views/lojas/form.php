@@ -19,10 +19,10 @@
 
                     <div class="mb-3">
                         <label for="franquia_id" class="form-label">Franquia *</label>
-                        <select id="franquia_id" name="franquia_id" class="form-control" required>
+                        <select id="franquia_id" name="franquia_id" class="form-select" required>
                             <option value="">Selecione uma franquia</option>
                             <?php foreach ($franquias as $franquia): ?>
-                                <option value="<?= esc($franquia['id']) ?>" <?= old('franquia_id', $loja['franquia_id']) == $franquia['id'] ? 'selected' : '' ?>>
+                                <option value="<?= esc($franquia['id']) ?>" <?= (string) old('franquia_id', $loja['franquia_id']) === (string) $franquia['id'] ? 'selected' : '' ?>>
                                     <?= esc($franquia['nome']) ?>
                                 </option>
                             <?php endforeach; ?>
