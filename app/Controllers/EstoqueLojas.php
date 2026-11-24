@@ -51,7 +51,7 @@ class EstoqueLojas extends BaseController
                 ->with('erros', ['Já existe estoque cadastrado para esta loja e produto.']);
         }
 
-        if (! $this->estoqueLojaModel->insert($dados)) {
+        if (! $this->estoqueLojaModel->registrarEntrada($dados)) {
             return redirect()->back()->withInput()->with('erros', $this->estoqueLojaModel->errors());
         }
 
@@ -91,7 +91,7 @@ class EstoqueLojas extends BaseController
         // O "id" segue junto para as regras de validação do model.
         $dados += ['id' => $id];
 
-        if (! $this->estoqueLojaModel->update($id, $dados)) {
+        if (! $this->estoqueLojaModel->revisarEstoque($id, $dados)) {
             return redirect()->back()->withInput()->with('erros', $this->estoqueLojaModel->errors());
         }
 
@@ -104,9 +104,11 @@ class EstoqueLojas extends BaseController
             return redirect()->to('estoque-lojas')->with('erros', ['Estoque não encontrado.']);
         }
 
-        $this->estoqueLojaModel->delete($id);
+        if (! $this->estoqueLojaModel->removerEstoque($id)) {
+            return redirect()->to('estoque-lojas')->with('erros', ['Não foi possível excluir o estoque e registrar a movimentação.']);
+        }
 
-        return redirect()->to('estoque-lojas')->with('sucesso', 'Estoque excluído com sucesso.');
+        return redirect()->to('estoque-lojas')->with('sucesso', 'Estoque excluído e movimentação registrada com sucesso.');
     }
 
     /**

@@ -24,7 +24,8 @@ class EstoqueLojaSeeder extends Seeder
         // Quantidade determinística: varia por loja e por produto.
         foreach ($lojas as $i => $loja) {
             foreach ($produtos as $j => $produto) {
-                $model->insert([
+                // Usa o método transacional para gerar o movimento de entrada inicial.
+                $model->registrarEntrada([
                     'loja_id'    => $loja['id'],
                     'produto_id' => $produto['id'],
                     'quantidade' => ($i + 1) * 5 + $j * 2,

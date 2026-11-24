@@ -41,8 +41,9 @@
 
                     <div class="mb-3">
                         <label for="quantidade" class="form-label">Quantidade *</label>
-                        <input type="number" id="quantidade" name="quantidade" class="form-control" step="1" min="0"
+                        <input type="number" id="quantidade" name="quantidade" class="form-control" step="1" min="-99999"
                                value="<?= esc(old('quantidade', $estoque['quantidade'])) ?>" required>
+                        <div class="form-text">Saldo negativo é permitido e indica venda sem entrada de estoque.</div>
                     </div>
 
                     <div class="d-flex gap-2">

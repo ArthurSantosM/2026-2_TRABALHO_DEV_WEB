@@ -70,11 +70,11 @@ class VendaProdutos extends BaseController
             return redirect()->back()->withInput()->with('erros', [$erroVinculo]);
         }
 
-        if (! $this->vendaProdutoModel->insert($dados)) {
+        if (! $this->vendaProdutoModel->registrarVenda($dados)) {
             return redirect()->back()->withInput()->with('erros', $this->vendaProdutoModel->errors());
         }
 
-        return redirect()->to('venda-produtos')->with('sucesso', 'Venda cadastrada com sucesso.');
+        return redirect()->to('venda-produtos')->with('sucesso', 'Venda cadastrada e estoque baixado com sucesso.');
     }
 
     public function editar(int $id): string|RedirectResponse
@@ -112,11 +112,11 @@ class VendaProdutos extends BaseController
         // O "id" segue junto para as regras de validação do model.
         $dados += ['id' => $id];
 
-        if (! $this->vendaProdutoModel->update($id, $dados)) {
+        if (! $this->vendaProdutoModel->revisarVenda($id, $dados)) {
             return redirect()->back()->withInput()->with('erros', $this->vendaProdutoModel->errors());
         }
 
-        return redirect()->to('venda-produtos')->with('sucesso', 'Venda atualizada com sucesso.');
+        return redirect()->to('venda-produtos')->with('sucesso', 'Venda atualizada e estoque ajustado com sucesso.');
     }
 
     public function excluir(int $id): RedirectResponse
@@ -125,9 +125,11 @@ class VendaProdutos extends BaseController
             return redirect()->to('venda-produtos')->with('erros', ['Venda não encontrada.']);
         }
 
-        $this->vendaProdutoModel->delete($id);
+        if (! $this->vendaProdutoModel->removerVenda($id)) {
+            return redirect()->to('venda-produtos')->with('erros', ['Não foi possível excluir a venda e devolver o estoque.']);
+        }
 
-        return redirect()->to('venda-produtos')->with('sucesso', 'Venda excluída com sucesso.');
+        return redirect()->to('venda-produtos')->with('sucesso', 'Venda excluída e estoque devolvido com sucesso.');
     }
 
     /**

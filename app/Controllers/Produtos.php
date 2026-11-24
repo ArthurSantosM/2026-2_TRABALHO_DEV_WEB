@@ -33,7 +33,7 @@ class Produtos extends BaseController
         return view('produtos/form', [
             'titulo'     => 'Novo produto',
             'acao'       => site_url('produtos/salvar'),
-            'produto'    => ['nome' => '', 'descricao' => '', 'preco' => '', 'quantidade' => 0, 'categoria_id' => ''],
+            'produto'    => ['nome' => '', 'descricao' => '', 'preco' => '', 'categoria_id' => ''],
             'categorias' => $this->categoriaModel->listar(),
         ]);
     }
@@ -100,7 +100,6 @@ class Produtos extends BaseController
             'nome'         => trim((string) $this->request->getPost('nome')),
             'descricao'    => trim((string) $this->request->getPost('descricao')),
             'preco'        => trim((string) $this->request->getPost('preco')),
-            'quantidade'   => trim((string) $this->request->getPost('quantidade')),
             'categoria_id' => ($categoria === null || $categoria === '') ? null : $categoria,
         ];
     }

@@ -40,7 +40,9 @@
                         <td><?= esc($estoque['loja_nome']) ?></td>
                         <td><?= esc($estoque['produto_nome']) ?></td>
                         <td class="text-end">
-                            <?php if ((int) $estoque['quantidade'] === 0): ?>
+                            <?php if ((int) $estoque['quantidade'] < 0): ?>
+                                <span class="badge text-bg-danger">Negativo: <?= esc($estoque['quantidade']) ?></span>
+                            <?php elseif ((int) $estoque['quantidade'] === 0): ?>
                                 <span class="badge text-bg-danger">Esgotado</span>
                             <?php else: ?>
                                 <?= esc($estoque['quantidade']) ?>

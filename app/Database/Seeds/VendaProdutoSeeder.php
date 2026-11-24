@@ -37,7 +37,8 @@ class VendaProdutoSeeder extends Seeder
             $produto = $produtoModel->where('nome', $nomeProduto)->first();
             $unidade = $unidadeModel->where('identificador', $identificadorUnidade)->first();
 
-            $model->insert([
+            // Usa o método transacional: registra a venda e já baixa o estoque da loja.
+            $model->registrarVenda([
                 'cliente_id'     => $cliente['id'] ?? null,
                 'loja_id'        => $loja['id'] ?? null,
                 'produto_id'     => $produto['id'] ?? null,

@@ -68,6 +68,10 @@ $routes->group('estoque-lojas', static function ($routes) {
     $routes->post('excluir/(:num)', 'EstoqueLojas::excluir/$1');
 });
 
+$routes->group('estoque-movimentacoes', static function ($routes) {
+    $routes->get('', 'EstoqueMovimentacoes::index');
+});
+
 $routes->group('venda-produtos', static function ($routes) {
     $routes->get('', 'VendaProdutos::index');
     $routes->get('nova', 'VendaProdutos::novo');

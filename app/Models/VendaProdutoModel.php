@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\EstoqueLojaModel;
 use CodeIgniter\Model;
 
 class VendaProdutoModel extends Model
 {
+    private EstoqueLojaModel $estoqueLojaModel;
+
     protected $table         = 'venda_produtos';
     protected $primaryKey    = 'id';
     protected $returnType    = 'array';
@@ -60,6 +63,121 @@ class VendaProdutoModel extends Model
             'less_than'    => 'O preço unitário deve ser menor que 100.000.',
         ],
     ];
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->estoqueLojaModel = new EstoqueLojaModel();
+    }
+
+    /**
+     * Grava a venda e dá a baixa no estoque da loja na mesma transação.
+     */
+    public function registrarVenda(array $dados): bool
+    {
+        $this->db->transStart();
+
+        if (! $this->insert($dados)) {
+            $this->db->transRollback();
+
+            return false;
+        }
+
+        $this->estoqueLojaModel->movimentar(
+            (int) $dados['loja_id'],
+            (int) $dados['produto_id'],
+            - (int) $dados['quantidade'],
+            'venda',
+            (int) $this->insertID(),
+            'Baixa por venda'
+        );
+
+        $this->db->transComplete();
+
+        return $this->db->transStatus() !== false;
+    }
+
+    /**
+     * Revisa a venda e ajusta o estoque apenas pela diferença.
+     * Se a loja ou o produto mudou, devolve no antigo e baixa no novo.
+     */
+    public function revisarVenda(int $id, array $dados): bool
+    {
+        $anterior = $this->find($id);
+
+        if ($anterior === null) {
+            return false;
+        }
+
+        $this->db->transStart();
+
+        if (! $this->update($id, $dados)) {
+            $this->db->transRollback();
+
+            return false;
+        }
+
+        $lojaAntiga       = (int) $anterior['loja_id'];
+        $produtoAntigo    = (int) $anterior['produto_id'];
+        $quantidadeAntiga = (int) $anterior['quantidade'];
+        $lojaNova         = (int) $dados['loja_id'];
+        $produtoNovo      = (int) $dados['produto_id'];
+        $quantidadeNova   = (int) $dados['quantidade'];
+
+        if ($lojaAntiga === $lojaNova && $produtoAntigo === $produtoNovo) {
+            // Positivo devolve a diferença; negativo dá baixa da diferença.
+            $this->estoqueLojaModel->movimentar(
+                $lojaNova,
+                $produtoNovo,
+                $quantidadeAntiga - $quantidadeNova,
+                'venda',
+                $id,
+                'Ajuste por edição de venda'
+            );
+        } else {
+            // A venda saiu de uma loja/produto e foi para outro.
+            $this->estoqueLojaModel->movimentar($lojaAntiga, $produtoAntigo, $quantidadeAntiga, 'venda', $id, 'Ajuste por edição de venda');
+            $this->estoqueLojaModel->movimentar($lojaNova, $produtoNovo, -$quantidadeNova, 'venda', $id, 'Ajuste por edição de venda');
+        }
+
+        $this->db->transComplete();
+
+        return $this->db->transStatus() !== false;
+    }
+
+    /**
+     * Exclui a venda e devolve a quantidade ao estoque da loja.
+     */
+    public function removerVenda(int $id): bool
+    {
+        $venda = $this->find($id);
+
+        if ($venda === null) {
+            return false;
+        }
+
+        $this->db->transStart();
+
+        if (! $this->delete($id)) {
+            $this->db->transRollback();
+
+            return false;
+        }
+
+        $this->estoqueLojaModel->movimentar(
+            (int) $venda['loja_id'],
+            (int) $venda['produto_id'],
+            (int) $venda['quantidade'],
+            'estorno',
+            null,
+            'Estorno da venda #' . $id
+        );
+
+        $this->db->transComplete();
+
+        return $this->db->transStatus() !== false;
+    }
 
     /**
      * Lista as vendas com os nomes de cliente, loja e produto, com busca opcional.
