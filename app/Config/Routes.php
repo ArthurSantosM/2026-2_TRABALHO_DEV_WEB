@@ -74,6 +74,7 @@ $routes->group('estoque-movimentacoes', static function ($routes) {
 
 $routes->group('venda-produtos', static function ($routes) {
     $routes->get('', 'VendaProdutos::index');
+    $routes->get('opcoes', 'VendaProdutos::opcoes');
     $routes->get('nova', 'VendaProdutos::novo');
     $routes->post('salvar', 'VendaProdutos::salvar');
     $routes->get('editar/(:num)', 'VendaProdutos::editar/$1');

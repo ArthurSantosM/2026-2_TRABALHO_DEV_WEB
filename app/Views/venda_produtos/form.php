@@ -45,9 +45,11 @@
                             <select id="produto_id" name="produto_id" class="form-select" required>
                                 <option value="">Selecione um produto</option>
                                 <?php foreach ($produtos as $produto): ?>
+                                    <?php $precoProduto = (float) $produto['preco']; ?>
                                     <option value="<?= esc($produto['id']) ?>"
+                                            data-preco="<?= esc(number_format($precoProduto, 2, '.', '')) ?>"
                                         <?= $produtoEscolhido === (string) $produto['id'] ? 'selected' : '' ?>>
-                                        <?= esc($produto['nome']) ?>
+                                        <?= esc($produto['nome']) ?> — R$ <?= esc(number_format($precoProduto, 2, ',', '.')) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -84,6 +86,7 @@
                             <label for="preco_unitario" class="form-label">Preço unit. (R$) *</label>
                             <input type="number" id="preco_unitario" name="preco_unitario" class="form-control" step="0.01" min="0.01"
                                    value="<?= esc(old('preco_unitario', $venda['preco_unitario'])) ?>" required>
+                            <div class="form-text">Preenchido com o preço do produto; pode ser ajustado.</div>
                         </div>
                     </div>
 
@@ -96,5 +99,111 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const cliente = document.getElementById('cliente_id');
+    const loja = document.getElementById('loja_id');
+    const unidade = document.getElementById('unidade_id');
+    const produto = document.getElementById('produto_id');
+    const preco = document.getElementById('preco_unitario');
+    const endpoint = <?= json_encode(site_url('venda-produtos/opcoes'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+
+    function preencher(select, itens, placeholder, manter) {
+        const atual = String(manter || '');
+        const existe = itens.some(function (item) { return String(item.id) === atual; });
+        const opcoes = (atual && !existe)
+            ? [{ id: atual, nome: 'Seleção anterior (vínculo alterado)' }].concat(itens)
+            : itens;
+
+        select.replaceChildren(new Option(placeholder, ''));
+        opcoes.forEach(function (item) {
+            select.add(new Option(item.nome, item.id));
+        });
+
+        if (atual) {
+            select.value = atual;
+        }
+    }
+
+    async function buscar(params) {
+        const resposta = await fetch(endpoint + '?' + params.toString());
+
+        if (! resposta.ok) {
+            return { lojas: [], unidades: [] };
+        }
+
+        return resposta.json();
+    }
+
+    function paramsCliente() {
+        return new URLSearchParams({ cliente_id: cliente.value });
+    }
+
+    async function atualizarUnidades(manter) {
+        if (! cliente.value || ! loja.value) {
+            preencher(unidade, [], 'Selecione uma unidade', manter);
+            return;
+        }
+
+        const params = paramsCliente();
+        params.set('loja_id', loja.value);
+        const dados = await buscar(params);
+
+        preencher(unidade, dados.unidades, 'Selecione uma unidade', manter);
+
+        if (! unidade.value && dados.unidades.length === 1) {
+            unidade.value = dados.unidades[0].id;
+        }
+    }
+
+    async function atualizarLojas(manterLoja, manterUnidade) {
+        if (! cliente.value) {
+            preencher(loja, [], 'Selecione uma loja', manterLoja);
+            await atualizarUnidades(manterUnidade);
+            return;
+        }
+
+        const dados = await buscar(paramsCliente());
+        preencher(loja, dados.lojas, 'Selecione uma loja', manterLoja);
+
+        if (! loja.value && dados.lojas.length === 1) {
+            loja.value = dados.lojas[0].id;
+        }
+
+        await atualizarUnidades(manterUnidade);
+    }
+
+    cliente.addEventListener('change', function () {
+        loja.value = '';
+        unidade.value = '';
+        atualizarLojas();
+    });
+
+    loja.addEventListener('change', function () {
+        unidade.value = '';
+        atualizarUnidades();
+    });
+
+    // No cadastro os campos começam vazios; na edição as seleções atuais são preservadas.
+    atualizarLojas(loja.value, unidade.value);
+
+    function aplicarPrecoDoProduto() {
+        const selecionado = produto.options[produto.selectedIndex];
+        const valor = selecionado ? selecionado.dataset.preco : '';
+
+        if (valor) {
+            preco.value = valor;
+        }
+    }
+
+    produto.addEventListener('change', aplicarPrecoDoProduto);
+
+    // Na edição o preço congelado da venda não deve ser sobrescrito.
+    if (preco.value.trim() === '') {
+        aplicarPrecoDoProduto();
+    }
+});
+</script>
 
 <?= $this->endSection() ?>

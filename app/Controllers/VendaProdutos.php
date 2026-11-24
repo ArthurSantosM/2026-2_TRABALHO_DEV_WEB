@@ -9,6 +9,7 @@ use App\Models\ProdutoModel;
 use App\Models\UnidadeModel;
 use App\Models\VendaProdutoModel;
 use CodeIgniter\HTTP\RedirectResponse;
+use CodeIgniter\HTTP\Response;
 
 class VendaProdutos extends BaseController
 {
@@ -37,6 +38,25 @@ class VendaProdutos extends BaseController
             'titulo' => 'Vendas',
             'busca'  => $busca,
             'vendas' => $this->vendaProdutoModel->listar($busca),
+        ]);
+    }
+
+    /**
+     * Opções dependentes do formulário: lojas do cliente e unidades do cliente na loja.
+     */
+    public function opcoes(): Response
+    {
+        $clienteId = (int) $this->request->getGet('cliente_id');
+        $lojaId    = (int) $this->request->getGet('loja_id');
+
+        $lojas    = $clienteId > 0 ? $this->clienteUnidadeModel->lojasDoCliente($clienteId) : [];
+        $unidades = ($clienteId > 0 && $lojaId > 0)
+            ? $this->clienteUnidadeModel->unidadesDoClienteNaLoja($clienteId, $lojaId)
+            : [];
+
+        return $this->response->setJSON([
+            'lojas'    => $lojas,
+            'unidades' => $unidades,
         ]);
     }
 

@@ -32,6 +32,37 @@ class ClienteUnidadeModel extends Model
     ];
 
     /**
+     * Lojas onde o cliente possui pelo menos uma unidade vinculada.
+     */
+    public function lojasDoCliente(int $clienteId): array
+    {
+        return $this->db->table('cliente_unidades')
+            ->distinct()
+            ->select('lojas.id, lojas.nome')
+            ->join('unidades', 'unidades.id = cliente_unidades.unidade_id')
+            ->join('lojas', 'lojas.id = unidades.loja_id')
+            ->where('cliente_unidades.cliente_id', $clienteId)
+            ->orderBy('lojas.nome', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
+
+    /**
+     * Unidades do cliente que pertencem a uma loja específica.
+     */
+    public function unidadesDoClienteNaLoja(int $clienteId, int $lojaId): array
+    {
+        return $this->db->table('cliente_unidades')
+            ->select('unidades.id, unidades.identificador AS nome')
+            ->join('unidades', 'unidades.id = cliente_unidades.unidade_id')
+            ->where('cliente_unidades.cliente_id', $clienteId)
+            ->where('unidades.loja_id', $lojaId)
+            ->orderBy('unidades.identificador', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
+
+    /**
      * Lista os vínculos com nome do cliente, unidade e loja.
      */
     public function listar(?string $busca = null): array
