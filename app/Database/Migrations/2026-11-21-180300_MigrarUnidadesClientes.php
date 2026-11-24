@@ -64,11 +64,17 @@ class MigrarUnidadesClientes extends Migration
             }
         }
 
+        // O Forge do SQLite recria a tabela renomeando-a para "temp_clientes".
+        // Com o modo legado ligado, o SQLite não reescreve as FKs de
+        // cliente_unidades/venda_produtos para apontar para a tabela temporária.
+        $this->modoLegado(true);
         $this->forge->dropColumn('clientes', 'unidade');
+        $this->modoLegado(false);
     }
 
     public function down()
     {
+        $this->modoLegado(true);
         $this->forge->addColumn('clientes', [
             'unidade' => [
                 'type'       => 'VARCHAR',
@@ -76,12 +82,25 @@ class MigrarUnidadesClientes extends Migration
                 'null'       => true,
             ],
         ]);
+        $this->modoLegado(false);
 
+        // Sem alias de tabela: sintaxe aceita por SQLite e MySQL.
         $this->db->query(
-            'UPDATE `clientes` c SET `unidade` = ('
+            'UPDATE `clientes` SET `unidade` = ('
             . 'SELECT u.`identificador` FROM `cliente_unidades` cu '
             . 'JOIN `unidades` u ON u.`id` = cu.`unidade_id` '
-            . 'WHERE cu.`cliente_id` = c.`id` LIMIT 1)'
+            . 'WHERE cu.`cliente_id` = `clientes`.`id` LIMIT 1)'
         );
+    }
+
+    /**
+     * Liga/desliga o comportamento legado do ALTER TABLE do SQLite, que evita
+     * reescrever as FKs das outras tabelas durante a recriação da tabela.
+     */
+    private function modoLegado(bool $ativo): void
+    {
+        if ($this->db->DBDriver === 'SQLite3') {
+            $this->db->query('PRAGMA legacy_alter_table = ' . ($ativo ? 'ON' : 'OFF'));
+        }
     }
 }

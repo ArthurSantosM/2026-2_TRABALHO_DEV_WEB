@@ -67,6 +67,11 @@ class EstoqueMovimentoModel extends Model
         ?int $vendaId = null,
         ?string $observacao = null
     ): bool {
+        // Uma movimentação zero não altera o saldo e não deve poluir o histórico.
+        if ($quantidade === 0) {
+            return true;
+        }
+
         $saldo = $this->db->table('estoque_lojas')
             ->select('quantidade')
             ->where('loja_id', $lojaId)

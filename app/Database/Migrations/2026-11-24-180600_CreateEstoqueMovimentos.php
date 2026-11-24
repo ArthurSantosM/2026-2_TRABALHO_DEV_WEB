@@ -72,7 +72,9 @@ class CreateEstoqueMovimentos extends Migration
         $this->forge->addPrimaryKey('id');
         $this->forge->addForeignKey('loja_id', 'lojas', 'id', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('produto_id', 'produtos', 'id', 'CASCADE', 'RESTRICT');
-        $this->forge->addForeignKey('venda_id', 'venda_produtos', 'id', 'SET NULL', 'RESTRICT');
+        // Assinatura: (campo, tabela, coluna, onUpdate, onDelete).
+        // Ao excluir a venda, o movimento permanece no histórico com venda_id nulo.
+        $this->forge->addForeignKey('venda_id', 'venda_produtos', 'id', 'CASCADE', 'SET NULL');
         $this->forge->addKey(['loja_id', 'produto_id']);
         $this->forge->createTable('estoque_movimentos');
     }

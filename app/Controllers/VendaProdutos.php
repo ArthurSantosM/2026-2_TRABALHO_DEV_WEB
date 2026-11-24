@@ -85,7 +85,7 @@ class VendaProdutos extends BaseController
     {
         $dados = $this->dadosDoFormulario();
 
-        $erroVinculo = $this->validarVinculo((int) $dados['cliente_id'], (int) $dados['loja_id'], (int) $dados['unidade_id']);
+        $erroVinculo = $this->clienteUnidadeModel->validarVinculo((int) $dados['cliente_id'], (int) $dados['loja_id'], (int) $dados['unidade_id']);
         if ($erroVinculo !== null) {
             return redirect()->back()->withInput()->with('erros', [$erroVinculo]);
         }
@@ -124,7 +124,7 @@ class VendaProdutos extends BaseController
 
         $dados = $this->dadosDoFormulario();
 
-        $erroVinculo = $this->validarVinculo((int) $dados['cliente_id'], (int) $dados['loja_id'], (int) $dados['unidade_id']);
+        $erroVinculo = $this->clienteUnidadeModel->validarVinculo((int) $dados['cliente_id'], (int) $dados['loja_id'], (int) $dados['unidade_id']);
         if ($erroVinculo !== null) {
             return redirect()->back()->withInput()->with('erros', [$erroVinculo]);
         }
@@ -180,34 +180,5 @@ class VendaProdutos extends BaseController
             'quantidade'     => trim((string) $this->request->getPost('quantidade')),
             'preco_unitario' => trim((string) $this->request->getPost('preco_unitario')),
         ];
-    }
-
-    /**
-     * Garante que a unidade pertence à loja e que o cliente possui cadastro nela.
-     *
-     * @return string|null Mensagem de erro, ou null quando o vínculo é válido.
-     */
-    private function validarVinculo(int $clienteId, int $lojaId, int $unidadeId): ?string
-    {
-        $unidade = $this->unidadeModel->find($unidadeId);
-
-        if ($unidade === null) {
-            return 'A unidade informada não existe.';
-        }
-
-        if ((int) $unidade['loja_id'] !== $lojaId) {
-            return 'A unidade informada não pertence à loja escolhida.';
-        }
-
-        $vinculo = $this->clienteUnidadeModel
-            ->where('cliente_id', $clienteId)
-            ->where('unidade_id', $unidadeId)
-            ->countAllResults() > 0;
-
-        if (! $vinculo) {
-            return 'O cliente não possui cadastro nesta unidade.';
-        }
-
-        return null;
     }
 }

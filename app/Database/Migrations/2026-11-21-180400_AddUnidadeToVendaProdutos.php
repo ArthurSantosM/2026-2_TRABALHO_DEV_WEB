@@ -44,7 +44,19 @@ class AddUnidadeToVendaProdutos extends Migration
 
     public function down()
     {
+        $this->modoLegado(true);
         $this->forge->dropForeignKey('venda_produtos', 'venda_produtos_unidade_id_foreign');
         $this->forge->dropColumn('venda_produtos', 'unidade_id');
+        $this->modoLegado(false);
+    }
+
+    /**
+     * Liga/desliga o comportamento legado do ALTER TABLE do SQLite.
+     */
+    private function modoLegado(bool $ativo): void
+    {
+        if ($this->db->DBDriver === 'SQLite3') {
+            $this->db->query('PRAGMA legacy_alter_table = ' . ($ativo ? 'ON' : 'OFF'));
+        }
     }
 }
