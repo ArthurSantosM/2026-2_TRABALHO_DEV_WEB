@@ -30,7 +30,7 @@
                         'estoque-movimentacoes' => 'Movimentações',
                         'venda-produtos'        => 'Vendas',
                         'unidades'              => 'Unidades',
-                        'cliente-unidades'      => 'Clientes x Unidades',
+                        'cliente-unidades'      => 'Clientes × Unidades',
                     ];
                     ?>
                     <?php foreach ($itensMenu as $caminho => $rotulo): ?>

@@ -112,16 +112,15 @@ document.addEventListener('DOMContentLoaded', function () {
     function preencher(select, itens, placeholder, manter) {
         const atual = String(manter || '');
         const existe = itens.some(function (item) { return String(item.id) === atual; });
-        const opcoes = (atual && !existe)
-            ? [{ id: atual, nome: 'Seleção anterior (vínculo alterado)' }].concat(itens)
-            : itens;
 
         select.replaceChildren(new Option(placeholder, ''));
-        opcoes.forEach(function (item) {
+        itens.forEach(function (item) {
             select.add(new Option(item.nome, item.id));
         });
 
-        if (atual) {
+        // Só mantém a seleção se ela ainda for válida; caso contrário, volta ao
+        // placeholder para o usuário escolher uma opção permitida.
+        if (atual && existe) {
             select.value = atual;
         }
     }
