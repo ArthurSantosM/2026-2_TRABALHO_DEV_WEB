@@ -15,7 +15,7 @@ class ClienteModel extends Model
     protected $validationRules = [
         'id'       => 'permit_empty|is_natural_no_zero',
         'nome'     => 'required|min_length[2]|max_length[150]',
-        'cpf'      => 'required|numeric|exact_length[11]|is_unique[clientes.cpf,id,{id}]',
+        'cpf'      => 'required|numeric|exact_length[11]|cpf_valido|is_unique[clientes.cpf,id,{id}]',
         'telefone' => 'permit_empty|numeric|min_length[10]|max_length[11]',
         'email'    => 'permit_empty|valid_email|max_length[150]',
     ];
